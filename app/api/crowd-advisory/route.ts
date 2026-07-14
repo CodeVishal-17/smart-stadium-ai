@@ -1,0 +1,59 @@
+import { NextResponse } from "next/server";
+import { projectAllGates } from "@/lib/crowdForecast";
+import { generateText } from "@/lib/llm";
+import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
+import { crowdAdvisorySchema } from "@/lib/validation";
+
+export const runtime = "nodejs";
+
+export async function POST(req: Request) {
+  if (isRateLimited(clientKeyFromRequest(req))) {
+    return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
+  }
+
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    body = {};
+  }
+
+  const parsed = crowdAdvisorySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  const projections = projectAllGates();
+  const critical = projections.filter((g) => g.status === "critical");
+  const watch = projections.filter((g) => g.status === "watch");
+
+  const dataSummary = projections
+    .map(
+      (g) =>
+        `${g.name}: ${g.currentCount}/${g.capacity} (${g.occupancyPct}% full), trend +${g.trendPerMin}/min, projected in 15min: ${g.projected15minPct}%, status: ${g.status}${g.minutesToCapacity !== null ? `, ~${g.minutesToCapacity} min to full capacity` : ""}`
+    )
+    .join("\n");
+
+  try {
+    const advisory = await generateText({
+      system:
+        "You are a Crowd Advisory Agent for a stadium control room. Given live gate occupancy and 15-minute projections, write: " +
+        "(1) a one-paragraph control-room briefing, (2) a short calm public announcement (max 2 sentences) suitable for PA/digital signage, and (3) a bullet list of concrete recommended actions (e.g. reroute fans, open extra scanners, deploy staff). " +
+        "Only use the data provided. Be concise and avoid alarming language for the public announcement even when status is critical. Format the response with clear headings: BRIEFING:, ANNOUNCEMENT:, ACTIONS:",
+      user: `Live gate data:\n${dataSummary}`,
+      maxOutputTokens: 450,
+    });
+
+    return NextResponse.json({
+      gates: projections,
+      criticalCount: critical.length,
+      watchCount: watch.length,
+      advisory,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to generate advisory." },
+      { status: 500 }
+    );
+  }
+}
