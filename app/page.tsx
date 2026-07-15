@@ -43,14 +43,15 @@ export default function Home() {
         <div className="relative">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
-            LIVE CONTROL ROOM
+            LIVE CONTROL ROOM · FIFA WORLD CUP 2026
           </div>
           <h1 className="scoreboard text-3xl font-bold text-emerald-50 sm:text-4xl">
             Smart Stadium Ops
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-emerald-100/70 sm:text-base">
-            GenAI-enabled venue operations: dynamic crowd advisories, indoor navigation, real-time decision
-            support, and multilingual fan assistance — all grounded in live venue data.
+            GenAI-enabled matchday operations: dynamic crowd advisories, indoor navigation, transport and
+            sustainability intelligence, real-time decision support, and multilingual fan assistance — all
+            grounded in live venue data.
           </p>
         </div>
       </header>

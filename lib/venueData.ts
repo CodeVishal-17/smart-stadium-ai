@@ -92,6 +92,59 @@ export const faqs: FaqEntry[] = [
     answer: "Alert the nearest steward or go to the Medical Point in Concourse A. For serious emergencies, call the venue emergency line displayed on all signage.",
     keywords: ["medical", "emergency", "injury", "sick", "help"],
   },
+  {
+    id: "faq-7",
+    question: "How do I get to the stadium by public transport?",
+    answer: "Metro Line 3 stops at Stadium Station (trains every 4 minutes until 1:00 AM), and a free Fan Shuttle loops from downtown to Gate 4 every 10 minutes with a valid match ticket.",
+    keywords: ["metro", "train", "shuttle", "bus", "transport", "public transport", "how to reach", "get to"],
+  },
+  {
+    id: "faq-8",
+    question: "Where can I park?",
+    answer: "Parking Lot C (South) usually has space and is a 12-minute walk to Gate 3. Lot A (North) fills early on matchdays. Rideshare pickup is at the East Plaza zone.",
+    keywords: ["parking", "park", "car", "lot", "rideshare", "taxi", "drop-off"],
+  },
+  {
+    id: "faq-9",
+    question: "What sustainability measures does the venue have?",
+    answer: "The stadium runs partly on solar power, diverts most matchday waste through compost and recycling stations on every concourse, and offers free water refill points to cut single-use plastic.",
+    keywords: ["sustainability", "recycle", "recycling", "eco", "green", "water refill", "plastic", "environment"],
+  },
+];
+
+export type TransitOption = {
+  id: string;
+  name: string;
+  mode: "metro" | "shuttle" | "parking" | "rideshare";
+  status: "on-time" | "delayed" | "full";
+  crowdLevel: "low" | "moderate" | "high";
+  detail: string;
+};
+
+// Matchday transport snapshot — in production this would come from the
+// host city's transit APIs and parking sensors.
+export const transitOptions: TransitOption[] = [
+  { id: "tr-1", name: "Metro Line 3 — Stadium Station", mode: "metro", status: "on-time", crowdLevel: "high", detail: "Every 4 min until 1:00 AM; expect queues 30 min after the final whistle." },
+  { id: "tr-2", name: "Fan Shuttle — Downtown Loop", mode: "shuttle", status: "on-time", crowdLevel: "moderate", detail: "Departs Gate 4 (West) every 10 min; free with match ticket." },
+  { id: "tr-3", name: "Parking Lot A (North)", mode: "parking", status: "full", crowdLevel: "high", detail: "Full since 5 PM — signage should redirect to Lot C." },
+  { id: "tr-4", name: "Parking Lot C (South)", mode: "parking", status: "on-time", crowdLevel: "low", detail: "1,200 spaces free; 12-minute walk to Gate 3." },
+  { id: "tr-5", name: "Rideshare Zone (East Plaza)", mode: "rideshare", status: "delayed", crowdLevel: "high", detail: "Surge pricing active; pickup wait ~20 min post-match." },
+];
+
+export type SustainabilityMetric = {
+  id: string;
+  label: string;
+  value: string;
+  status: "on-target" | "attention";
+  note: string;
+};
+
+// Venue sustainability snapshot — stands in for smart-meter and
+// waste-tracking IoT feeds.
+export const sustainabilityMetrics: SustainabilityMetric[] = [
+  { id: "su-1", label: "Energy use vs. target", value: "94%", status: "on-target", note: "Floodlights on efficiency profile; solar covering 18% of load." },
+  { id: "su-2", label: "Waste diverted from landfill", value: "71%", status: "on-target", note: "Compost + recycling streams at concourse stations." },
+  { id: "su-3", label: "Water consumption", value: "112%", status: "attention", note: "Above matchday target — pitch irrigation cycle overlapped with peak concourse use." },
 ];
 
 export type Incident = {

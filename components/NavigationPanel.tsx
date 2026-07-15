@@ -1,8 +1,8 @@
 "use client";
 
-import { Accessibility, MapPinned, Navigation } from "lucide-react";
+import { Accessibility, Bus, MapPinned, Navigation } from "lucide-react";
 import { useId, useState } from "react";
-import type { Poi } from "@/lib/venueData";
+import { transitOptions, type Poi } from "@/lib/venueData";
 import { LoadingButton } from "./LoadingButton";
 import { StatusPill } from "./StatusPill";
 
@@ -111,6 +111,27 @@ export function NavigationPanel() {
           <p>{directions}</p>
         </div>
       )}
+
+      <section aria-labelledby="transit-heading" className="rounded-xl border border-white/5 bg-black/20 p-4">
+        <h3 id="transit-heading" className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Bus className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+          Getting here &amp; away — live transport status
+        </h3>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {transitOptions.map((t) => (
+            <li key={t.id} className="rounded-lg border border-white/5 bg-black/20 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium text-slate-100">{t.name}</p>
+                <StatusPill status={t.status} />
+              </div>
+              <p className="mt-1 text-xs text-slate-500">{t.detail}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs text-slate-600">
+          Ask the Multilingual Assistant for personalised transport help — it&apos;s grounded in this same data.
+        </p>
+      </section>
 
       {matches.length > 0 && (
         <ul className="grid gap-3 sm:grid-cols-2" aria-label="Matching points of interest">

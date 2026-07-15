@@ -1,8 +1,8 @@
 "use client";
 
-import { FlaskConical, ShieldAlert } from "lucide-react";
+import { FlaskConical, Leaf, ShieldAlert } from "lucide-react";
 import { useId, useState } from "react";
-import type { Incident } from "@/lib/venueData";
+import { sustainabilityMetrics, type Incident } from "@/lib/venueData";
 import { LoadingButton } from "./LoadingButton";
 import { StatusPill } from "./StatusPill";
 
@@ -78,6 +78,27 @@ export function OpsPanel() {
           {error}
         </p>
       )}
+
+      <section aria-labelledby="sustainability-heading" className="rounded-xl border border-white/5 bg-black/20 p-4">
+        <h3 id="sustainability-heading" className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-200">
+          <Leaf className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+          Sustainability telemetry
+        </h3>
+        <ul className="grid gap-2 sm:grid-cols-3">
+          {sustainabilityMetrics.map((m) => (
+            <li key={m.id} className="rounded-lg border border-white/5 bg-black/20 p-3">
+              <p className="text-xs uppercase tracking-wider text-slate-500">{m.label}</p>
+              <p className={`scoreboard mt-1 text-xl font-bold ${m.status === "on-target" ? "text-emerald-300" : "text-amber-300"}`}>
+                {m.value}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">{m.note}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-xs text-slate-600">
+          This telemetry is included in the AI brief, so recommendations account for energy, waste, and water status.
+        </p>
+      </section>
 
       {incidents.length > 0 && (
         <ul className="space-y-2" aria-label="Live incident feed">

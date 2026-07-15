@@ -6,6 +6,9 @@ const STYLES: Record<string, string> = {
   critical: "bg-red-500/10 text-red-300 ring-1 ring-inset ring-red-500/40",
   high: "bg-red-500/10 text-red-300 ring-1 ring-inset ring-red-500/40",
   medium: "bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/30",
+  "on-time": "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
+  delayed: "bg-amber-500/10 text-amber-300 ring-1 ring-inset ring-amber-500/30",
+  full: "bg-red-500/10 text-red-300 ring-1 ring-inset ring-red-500/40",
 };
 
 const DOT: Record<string, string> = {
@@ -16,6 +19,9 @@ const DOT: Record<string, string> = {
   critical: "bg-red-400",
   high: "bg-red-400",
   medium: "bg-amber-400",
+  "on-time": "bg-emerald-400",
+  delayed: "bg-amber-400",
+  full: "bg-red-400",
 };
 
 export function StatusPill({ status }: { status: string }) {
