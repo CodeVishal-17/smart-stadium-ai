@@ -52,3 +52,14 @@ body {
 .live-dot {
   animation: pulse-glow 1.8s ease-in-out infinite;
 }
+
+/* Respect users who opt out of motion (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

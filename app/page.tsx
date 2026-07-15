@@ -22,7 +22,7 @@ export default function Home() {
   const [activeId, setActiveId] = useState(TABS[0].id);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:py-12">
+    <main id="main-content" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:py-12">
       <header className="relative overflow-hidden rounded-2xl border border-emerald-500/15 bg-gradient-to-b from-emerald-950/40 to-black/20 px-6 py-8 shadow-[0_0_60px_-20px_rgba(34,197,94,0.35)]">
         <div
           aria-hidden="true"

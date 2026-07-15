@@ -1,5 +1,7 @@
 # Smart Stadium Ops — GenAI Control Room
 
+[![CI](https://github.com/CodeVishal-17/smart-stadium-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/CodeVishal-17/smart-stadium-ai/actions/workflows/ci.yml)
+
 A working demo built for the "Smart Stadiums & Tournament Operations" challenge. It shows GenAI directly
 optimizing venue operations across four tracks, each backed by a real LLM call grounded in venue data (not
 hallucinated):
@@ -77,6 +79,16 @@ npm test        # vitest unit tests
 
 The app deploys as-is to [Vercel](https://vercel.com/new): import the GitHub repo, add `GEMINI_API_KEY`
 (and optionally `GEMINI_MODEL`) as environment variables in the Vercel project settings, and deploy.
+
+## Problem-statement alignment
+
+| Challenge track | Where it lives | GenAI role |
+| --- | --- | --- |
+| Dynamic crowd management | Crowd Management tab, `/api/crowd-advisory`, `/api/gates` | LLM converts live scan-driven occupancy + 15-min projections into a control-room briefing, calm PA announcement, and recommended actions |
+| Smart indoor navigation | Indoor Navigation tab, `/api/navigation` | Retrieval over venue POIs (crowd-aware, accessibility-aware) grounds LLM-generated turn-by-turn directions |
+| Real-time decision support | Decision Support tab, `/api/ops-brief` | LLM summarizes a multi-source incident feed, ranks severity, recommends SOP-aligned actions (human-in-the-loop), and answers what-if scenarios |
+| Multi-language assistance | Multilingual Assistant tab, `/api/assistant` | RAG over venue FAQs grounds replies generated in the fan's chosen language |
+| Sensing plane (IoT) | Scan Devices tab, `/api/devices`, `/api/scan` | Ticket scanners register per gate and stream real scan events that drive every dashboard number |
 
 ## Design notes
 
