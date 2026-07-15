@@ -46,13 +46,18 @@ export async function POST(req: Request) {
         "If multiple options are given, mention the best one first and note the alternative. Keep it under 80 words. Do not invent locations not in the data.",
       user: `Fan request: "${query}"\nAccessible-only requested: ${accessibleOnly}\n\nMatching points of interest:\n${poiSummary}`,
       maxOutputTokens: 220,
+      cacheKey: `nav:${accessibleOnly}:${query.trim().toLowerCase()}`,
+      cacheTtlMs: 5 * 60_000,
     });
 
     return NextResponse.json({ matches, directions });
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate directions." },
-      { status: 500 }
-    );
+  } catch {
+    // Fallback: deterministic directions from the top retrieval match.
+    const best = matches[0];
+    const directions =
+      `Nearest option: ${best.name}, located in ${best.zone} (closest entrance: ${best.nearGate.replace("gate-", "Gate ")}). ` +
+      `Current crowd level there is ${best.crowdLevel}.` +
+      (matches[1] ? ` Alternative: ${matches[1].name} in ${matches[1].zone}.` : "");
+    return NextResponse.json({ matches, directions, fallback: true });
   }
 }

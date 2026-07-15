@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { cacheGet, cacheSet } from "./cache";
 
 let client: GoogleGenAI | null = null;
 
@@ -24,7 +25,16 @@ export async function generateText(params: {
   system: string;
   user: string;
   maxOutputTokens?: number;
+  // When set, identical requests within cacheTtlMs are served from memory
+  // instead of spending free-tier quota.
+  cacheKey?: string;
+  cacheTtlMs?: number;
 }): Promise<string> {
+  if (params.cacheKey) {
+    const cached = cacheGet(params.cacheKey);
+    if (cached) return cached;
+  }
+
   const ai = getClient();
   const configured = process.env.GEMINI_MODEL;
   const models = configured
@@ -43,7 +53,11 @@ export async function generateText(params: {
           temperature: 0.4,
         },
       });
-      return response.text?.trim() ?? "";
+      const text = response.text?.trim() ?? "";
+      if (params.cacheKey && text) {
+        cacheSet(params.cacheKey, text, params.cacheTtlMs ?? 60_000);
+      }
+      return text;
     } catch (err) {
       lastError = err;
       const raw = err instanceof Error ? err.message : String(err);

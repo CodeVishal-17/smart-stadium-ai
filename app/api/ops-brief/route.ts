@@ -52,13 +52,22 @@ export async function POST(req: Request) {
         `Live incident feed (already sorted by severity):\n${incidentSummary}` +
         (whatIf ? `\n\nWhat-if scenario posed by the operator: "${whatIf}"` : ""),
       maxOutputTokens: 600,
+      cacheKey: `ops-brief:${whatIf?.trim().toLowerCase() ?? ""}`,
+      cacheTtlMs: 60_000,
     });
 
     return NextResponse.json({ incidents, brief });
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate ops brief." },
-      { status: 500 }
-    );
+  } catch {
+    // Fallback: severity-ordered template brief so the control room always
+    // gets something actionable, clearly labeled as non-AI.
+    const brief = [
+      "SITUATION SUMMARY (rules-engine fallback — AI copilot temporarily unavailable):",
+      `${incidents.length} open incident(s), highest severity: ${incidents[0]?.severity ?? "none"}.`,
+      "",
+      "RECOMMENDED ACTIONS (require human approval):",
+      ...incidents.map((i) => `- [${i.severity.toUpperCase()}] ${i.zone}: dispatch nearest staff per SOP for ${i.source} reports.`),
+      whatIf ? `\nWHAT-IF IMPACT: unavailable in fallback mode — re-run in a minute for AI analysis of "${whatIf}".` : "",
+    ].join("\n");
+    return NextResponse.json({ incidents, brief, fallback: true });
   }
 }

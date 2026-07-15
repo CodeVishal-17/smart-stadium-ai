@@ -38,13 +38,18 @@ export async function POST(req: Request) {
         `Respond in ${language}, in a friendly, concise tone (2-4 sentences). If the context doesn't cover the question, say you don't have that information and suggest asking a volunteer or the Info Desk near Gate 3.`,
       user: `Venue FAQ context:\n${groundingText}\n\nFan question: "${message}"`,
       maxOutputTokens: 250,
+      cacheKey: `assistant:${language}:${message.trim().toLowerCase()}`,
+      cacheTtlMs: 5 * 60_000,
     });
 
     return NextResponse.json({ reply, sources: relevantFaqs.map((f) => f.question) });
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate a reply." },
-      { status: 500 }
-    );
+  } catch {
+    // Fallback: serve the top FAQ answer verbatim (English only) so the
+    // fan still gets grounded information when the AI is unavailable.
+    const reply =
+      relevantFaqs.length > 0
+        ? `${relevantFaqs[0].answer} (Automatic FAQ answer — the multilingual assistant is briefly unavailable.)`
+        : "The assistant is briefly unavailable. Please ask a volunteer or visit the Info Desk in Concourse C, near Gate 3.";
+    return NextResponse.json({ reply, sources: relevantFaqs.map((f) => f.question), fallback: true });
   }
 }

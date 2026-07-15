@@ -42,6 +42,10 @@ export async function POST(req: Request) {
         "Only use the data provided. Be concise and avoid alarming language for the public announcement even when status is critical. Format the response with clear headings: BRIEFING:, ANNOUNCEMENT:, ACTIONS:",
       user: `Live gate data:\n${dataSummary}`,
       maxOutputTokens: 450,
+      // Bucket the cache key by each gate's status so a materially changed
+      // situation regenerates, but repeated clicks within a minute don't.
+      cacheKey: `crowd-advisory:${projections.map((g) => g.status).join(",")}`,
+      cacheTtlMs: 60_000,
     });
 
     return NextResponse.json({
@@ -50,10 +54,32 @@ export async function POST(req: Request) {
       watchCount: watch.length,
       advisory,
     });
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to generate advisory." },
-      { status: 500 }
-    );
+  } catch {
+    // Rules-engine fallback: the control room still gets an actionable
+    // (clearly labeled, non-AI) briefing if the LLM is unavailable.
+    const busiest = [...projections].sort((a, b) => b.projected15minPct - a.projected15minPct)[0];
+    const quietest = [...projections].sort((a, b) => a.occupancyPct - b.occupancyPct)[0];
+    const advisory = [
+      "BRIEFING (rules-engine fallback — AI advisory temporarily unavailable):",
+      critical.length > 0
+        ? `${critical.length} gate(s) critical: ${critical.map((g) => g.name).join(", ")}. Highest projected load is ${busiest.name} at ${busiest.projected15minPct}% in 15 minutes.`
+        : `No gates critical. Highest projected load is ${busiest.name} at ${busiest.projected15minPct}% in 15 minutes.`,
+      "",
+      "ANNOUNCEMENT:",
+      `For faster entry, fans are encouraged to use ${quietest.name}, which currently has the shortest queues.`,
+      "",
+      "ACTIONS:",
+      ...critical.map((g) => `- Reroute incoming fans from ${g.name} toward ${quietest.name} and open additional scanners.`),
+      ...watch.map((g) => `- Monitor ${g.name} (${g.occupancyPct}% now, ${g.projected15minPct}% projected).`),
+      "- Re-run the AI advisory in a minute for a full natural-language briefing.",
+    ].join("\n");
+
+    return NextResponse.json({
+      gates: projections,
+      criticalCount: critical.length,
+      watchCount: watch.length,
+      advisory,
+      fallback: true,
+    });
   }
 }

@@ -112,3 +112,36 @@ describe("LLM-backed routes (mocked model)", () => {
     expect(json.directions).toMatch(/couldn't find/i);
   });
 });
+
+describe("rules-engine fallbacks when the LLM is unavailable", () => {
+  it("crowd advisory degrades to a labeled non-AI briefing", async () => {
+    const { generateText } = await import("@/lib/llm");
+    vi.mocked(generateText).mockRejectedValueOnce(new Error("quota"));
+    const res = await crowdPost(jsonRequest({}));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.fallback).toBe(true);
+    expect(json.advisory).toMatch(/rules-engine fallback/i);
+    expect(json.gates).toHaveLength(5);
+  });
+
+  it("navigation degrades to deterministic directions from retrieval", async () => {
+    const { generateText } = await import("@/lib/llm");
+    vi.mocked(generateText).mockRejectedValueOnce(new Error("quota"));
+    const res = await navigationPost(jsonRequest({ query: "nearest restroom" }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.fallback).toBe(true);
+    expect(json.directions).toMatch(/Nearest option/);
+  });
+
+  it("assistant degrades to the top grounded FAQ answer", async () => {
+    const { generateText } = await import("@/lib/llm");
+    vi.mocked(generateText).mockRejectedValueOnce(new Error("quota"));
+    const res = await assistantPost(jsonRequest({ message: "Where is lost and found?" }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.fallback).toBe(true);
+    expect(json.reply).toMatch(/Info Desk/);
+  });
+});
