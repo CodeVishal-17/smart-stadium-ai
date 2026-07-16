@@ -81,6 +81,11 @@ npm test        # vitest unit tests
 The app deploys as-is to [Vercel](https://vercel.com/new): import the GitHub repo, add `GEMINI_API_KEY`
 (and optionally `GEMINI_MODEL`) as environment variables in the Vercel project settings, and deploy.
 
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the three-plane design (sensing → intelligence → interaction),
+a request-lifecycle walkthrough, key design decisions, and the production hardening path.
+
 ## Problem-statement alignment
 
 | Challenge track | Where it lives | GenAI role |

@@ -8,8 +8,12 @@ export type GateProjection = Gate & {
   status: "normal" | "watch" | "critical";
 };
 
-// Stand-in for the Prophet/LSTM density-forecasting model in the full
-// architecture: simple linear projection from current count + trend.
+/**
+ * Projects a gate's occupancy 15 minutes ahead via linear extrapolation of
+ * its current entry rate — a stand-in for the Prophet/LSTM forecasting
+ * model in the full architecture. Flags `watch` at ≥80% projected and
+ * `critical` at ≥95% projected or ≤10 minutes to capacity.
+ */
 export function projectGate(gate: Gate): GateProjection {
   const occupancyPct = round1((gate.currentCount / gate.capacity) * 100);
   const projectedCount = gate.currentCount + gate.trendPerMin * 15;
@@ -29,6 +33,7 @@ export function projectGate(gate: Gate): GateProjection {
   return { ...gate, occupancyPct, projected15minPct, minutesToCapacity, status };
 }
 
+/** Projections for every configured gate, fed by live scan-store counts. */
 export function projectAllGates(now?: number): GateProjection[] {
   return gates.map((g) => projectGate({ ...g, ...getGateLiveCounts(g.id, now) }));
 }

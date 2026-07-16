@@ -15,6 +15,7 @@ function score(text: string, keywords: string[], query: string): number {
   return s;
 }
 
+/** Top-k FAQ entries relevant to a fan's free-text question. */
 export function retrieveFaqs(query: string, topK = 3): FaqEntry[] {
   return [...faqs]
     .map((f) => ({ f, s: score(f.question + " " + f.answer, f.keywords, query) }))
@@ -24,6 +25,7 @@ export function retrieveFaqs(query: string, topK = 3): FaqEntry[] {
     .map((r) => r.f);
 }
 
+/** Top-k venue points of interest matching a navigation request, optionally restricted to accessible ones. */
 export function retrievePois(query: string, opts: { accessibleOnly?: boolean } = {}, topK = 3): Poi[] {
   return [...pois]
     .filter((p) => (opts.accessibleOnly ? p.accessible : true))

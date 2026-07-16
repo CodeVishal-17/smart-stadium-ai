@@ -6,6 +6,7 @@ const MAX_REQUESTS_PER_WINDOW = 20;
 
 const hits = new Map<string, { count: number; windowStart: number }>();
 
+/** True if this client key has exceeded its fixed-window request budget. */
 export function isRateLimited(key: string): boolean {
   const now = Date.now();
   const entry = hits.get(key);
@@ -19,6 +20,7 @@ export function isRateLimited(key: string): boolean {
   return entry.count > MAX_REQUESTS_PER_WINDOW;
 }
 
+/** Client identity for rate limiting, derived from the forwarded IP chain. */
 export function clientKeyFromRequest(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   return forwarded?.split(",")[0]?.trim() ?? "unknown";

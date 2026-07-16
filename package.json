@@ -1,7 +1,12 @@
 {
   "name": "smart-stadium-ai",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "GenAI-powered stadium operations control room for FIFA World Cup 2026: crowd management, indoor navigation, transport and sustainability intelligence, real-time decision support, and multilingual fan assistance.",
+  "license": "MIT",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

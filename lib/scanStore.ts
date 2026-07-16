@@ -38,11 +38,17 @@ function getStore(): Store {
   return g.__scanStore;
 }
 
+/** Clears all devices and tallies. Intended for tests. */
 export function resetStore(): void {
   const g = globalThis as typeof globalThis & { __scanStore?: Store };
   g.__scanStore = { devices: new Map(), tallies: new Map() };
 }
 
+/**
+ * Registers a ticket-scanner device at a gate and returns it with a
+ * generated UUID the physical hardware would use on every scan report.
+ * @throws if `gateId` does not match a configured gate.
+ */
 export function registerDevice(name: string, gateId: string): ScannerDevice {
   if (!gates.some((g) => g.id === gateId)) {
     throw new Error(`Unknown gate: ${gateId}`);
@@ -58,10 +64,17 @@ export function registerDevice(name: string, gateId: string): ScannerDevice {
   return device;
 }
 
+/** Returns all registered scanner devices, oldest first. */
 export function listDevices(): ScannerDevice[] {
   return [...getStore().devices.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
+/**
+ * Records `count` ticket scans from a registered device, moving its gate's
+ * headcount in (+) or out (−). Enforces the gate's physical bounds: entries
+ * stop at capacity and exits stop at zero.
+ * @throws if the device is not registered.
+ */
 export function recordScan(
   deviceId: string,
   direction: "in" | "out",
@@ -80,7 +93,10 @@ export function recordScan(
     store.tallies.set(device.gateId, tally);
   }
 
-  const gate = gates.find((g) => g.id === device.gateId)!;
+  const gate = gates.find((g) => g.id === device.gateId);
+  if (!gate) {
+    throw new Error(`Device ${device.id} references unknown gate ${device.gateId}`);
+  }
   for (let i = 0; i < count; i++) {
     if (direction === "in") {
       // A physical turnstile can't admit past capacity; mirror that here.
@@ -101,6 +117,10 @@ export function recordScan(
   return { device, gateId: device.gateId, currentCount: tally.in - tally.out };
 }
 
+/**
+ * Live occupancy for one gate: current headcount (scans in − scans out)
+ * and the net entry rate per minute measured over the last five minutes.
+ */
 export function getGateLiveCounts(gateId: string, now: number = Date.now()): {
   currentCount: number;
   trendPerMin: number;

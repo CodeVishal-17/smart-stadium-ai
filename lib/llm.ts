@@ -21,6 +21,12 @@ function getClient(): GoogleGenAI {
 // region, so a single hardcoded model is fragile for a demo deployment.
 const MODEL_FALLBACKS = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash-lite", "gemini-2.0-flash"];
 
+/**
+ * Single entry point for all Gemini text generation. Serves repeated
+ * requests from a TTL cache when `cacheKey` is set, and walks a model
+ * fallback chain when the configured model is missing or quota-limited.
+ * @throws a user-presentable Error when every model fails.
+ */
 export async function generateText(params: {
   system: string;
   user: string;
