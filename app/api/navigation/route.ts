@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { QUERY_CACHE_TTL_MS } from "@/lib/constants";
 import { generateText } from "@/lib/llm";
 import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
 import { retrievePois } from "@/lib/retrieval";
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
       user: `Fan request: "${query}"\nAccessible-only requested: ${accessibleOnly}\n\nMatching points of interest:\n${poiSummary}`,
       maxOutputTokens: 220,
       cacheKey: `nav:${accessibleOnly}:${query.trim().toLowerCase()}`,
-      cacheTtlMs: 5 * 60_000,
+      cacheTtlMs: QUERY_CACHE_TTL_MS,
     });
 
     return NextResponse.json({ matches, directions });

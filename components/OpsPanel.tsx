@@ -2,36 +2,26 @@
 
 import { FlaskConical, Leaf, ShieldAlert } from "lucide-react";
 import { useId, useState } from "react";
+import { useApiPost } from "@/lib/useApiPost";
 import { sustainabilityMetrics, type Incident } from "@/lib/venueData";
 import { LoadingButton } from "./LoadingButton";
 import { StatusPill } from "./StatusPill";
+
+type BriefResponse = { incidents: Incident[]; brief: string };
 
 export function OpsPanel() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [brief, setBrief] = useState<string | null>(null);
   const [whatIf, setWhatIf] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { post, loading, error } = useApiPost<BriefResponse>("/api/ops-brief");
   const whatIfId = useId();
 
   async function fetchBrief() {
-    setLoading(true);
-    setError(null);
-    try {
-      const trimmed = whatIf.trim();
-      const res = await fetch("/api/ops-brief", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(trimmed ? { whatIf: trimmed } : {}),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Request failed");
-      setIncidents(json.incidents ?? []);
-      setBrief(json.brief ?? null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+    const trimmed = whatIf.trim();
+    const result = await post(trimmed ? { whatIf: trimmed } : {});
+    if (result) {
+      setIncidents(result.incidents ?? []);
+      setBrief(result.brief ?? null);
     }
   }
 

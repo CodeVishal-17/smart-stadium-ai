@@ -2,17 +2,19 @@
 
 import { Accessibility, Bus, MapPinned, Navigation } from "lucide-react";
 import { useId, useState } from "react";
+import { useApiPost } from "@/lib/useApiPost";
 import { transitOptions, type Poi } from "@/lib/venueData";
 import { LoadingButton } from "./LoadingButton";
 import { StatusPill } from "./StatusPill";
+
+type NavigationResponse = { matches: Poi[]; directions: string };
 
 export function NavigationPanel() {
   const [query, setQuery] = useState("Find the nearest accessible restroom that isn't crowded");
   const [accessibleOnly, setAccessibleOnly] = useState(false);
   const [matches, setMatches] = useState<Poi[]>([]);
   const [directions, setDirections] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { post, loading, error, setError } = useApiPost<NavigationResponse>("/api/navigation");
   const inputId = useId();
   const checkboxId = useId();
 
@@ -21,22 +23,10 @@ export function NavigationPanel() {
       setError("Please enter at least 2 characters.");
       return;
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/navigation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, accessibleOnly }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Request failed");
-      setMatches(json.matches ?? []);
-      setDirections(json.directions ?? null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+    const result = await post({ query, accessibleOnly });
+    if (result) {
+      setMatches(result.matches ?? []);
+      setDirections(result.directions ?? null);
     }
   }
 

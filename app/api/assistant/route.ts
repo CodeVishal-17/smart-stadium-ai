@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { QUERY_CACHE_TTL_MS } from "@/lib/constants";
 import { generateText } from "@/lib/llm";
 import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
 import { retrieveFaqs } from "@/lib/retrieval";
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
       user: `Venue FAQ context:\n${groundingText}\n\nFan question: "${message}"`,
       maxOutputTokens: 250,
       cacheKey: `assistant:${language}:${message.trim().toLowerCase()}`,
-      cacheTtlMs: 5 * 60_000,
+      cacheTtlMs: QUERY_CACHE_TTL_MS,
     });
 
     return NextResponse.json({ reply, sources: relevantFaqs.map((f) => f.question) });

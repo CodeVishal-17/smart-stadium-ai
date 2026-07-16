@@ -2,6 +2,7 @@
 
 import { Languages, Send } from "lucide-react";
 import { useId, useState } from "react";
+import { useApiPost } from "@/lib/useApiPost";
 import { LoadingButton } from "./LoadingButton";
 
 type ChatMessage = {
@@ -9,6 +10,8 @@ type ChatMessage = {
   text: string;
   sources?: string[];
 };
+
+type AssistantResponse = { reply: string; sources?: string[] };
 
 const LANGUAGES = ["English", "Hindi", "Spanish", "French", "Arabic", "Mandarin"];
 
@@ -23,33 +26,20 @@ export function AssistantPanel() {
   const [message, setMessage] = useState("");
   const [language, setLanguage] = useState("English");
   const [history, setHistory] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { post, loading, error } = useApiPost<AssistantResponse>("/api/assistant");
   const inputId = useId();
   const langId = useId();
 
   async function send(textOverride?: string) {
     const trimmed = (textOverride ?? message).trim();
     if (!trimmed) return;
-    setLoading(true);
-    setError(null);
     const nextHistory: ChatMessage[] = [...history, { role: "user", text: trimmed }];
     setHistory(nextHistory);
     setMessage("");
 
-    try {
-      const res = await fetch("/api/assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, language }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Request failed");
-      setHistory([...nextHistory, { role: "assistant", text: json.reply, sources: json.sources }]);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+    const result = await post({ message: trimmed, language });
+    if (result) {
+      setHistory([...nextHistory, { role: "assistant", text: result.reply, sources: result.sources }]);
     }
   }
 

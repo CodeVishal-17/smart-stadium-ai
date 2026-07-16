@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ADVISORY_CACHE_TTL_MS } from "@/lib/constants";
 import { generateText } from "@/lib/llm";
 import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
 import { incidentFeed, sustainabilityMetrics, transitOptions } from "@/lib/venueData";
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
         (whatIf ? `\n\nWhat-if scenario posed by the operator: "${whatIf}"` : ""),
       maxOutputTokens: 600,
       cacheKey: `ops-brief:${whatIf?.trim().toLowerCase() ?? ""}`,
-      cacheTtlMs: 60_000,
+      cacheTtlMs: ADVISORY_CACHE_TTL_MS,
     });
 
     return NextResponse.json({ incidents, brief });

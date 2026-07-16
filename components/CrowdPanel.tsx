@@ -2,18 +2,19 @@
 
 import { Radar, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { GATE_POLL_INTERVAL_MS } from "@/lib/constants";
 import type { GateProjection } from "@/lib/crowdForecast";
+import { useApiPost } from "@/lib/useApiPost";
 import { LoadingButton } from "./LoadingButton";
 import { StadiumMap } from "./StadiumMap";
 import { StatusPill } from "./StatusPill";
 
-const POLL_MS = 8000;
+type AdvisoryResponse = { gates: GateProjection[]; advisory: string };
 
 export function CrowdPanel() {
   const [gates, setGates] = useState<GateProjection[]>([]);
   const [advisory, setAdvisory] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { post, loading, error } = useApiPost<AdvisoryResponse>("/api/crowd-advisory");
 
   // Live sensor feed: poll the zero-cost snapshot endpoint so gate cards
   // update continuously; the LLM advisory below stays on-demand.
@@ -32,7 +33,7 @@ export function CrowdPanel() {
     }
 
     poll();
-    const id = setInterval(poll, POLL_MS);
+    const id = setInterval(poll, GATE_POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -40,18 +41,10 @@ export function CrowdPanel() {
   }, []);
 
   async function fetchAdvisory() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/crowd-advisory", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Request failed");
-      setGates(json.gates ?? []);
-      setAdvisory(json.advisory ?? null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+    const result = await post({});
+    if (result) {
+      setGates(result.gates ?? []);
+      setAdvisory(result.advisory ?? null);
     }
   }
 

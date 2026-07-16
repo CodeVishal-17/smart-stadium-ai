@@ -83,6 +83,15 @@ npm test        # vitest unit tests
 The app deploys as-is to [Vercel](https://vercel.com/new): import the GitHub repo, add `GROQ_API_KEY`
 (or `GEMINI_API_KEY`) as an environment variable in the Vercel project settings, and deploy.
 
+## How to demo in two minutes
+
+1. **Scan Devices** tab → register a scanner at Gate 2 → hit **Burst +25** a few times. Every number on the
+   dashboard is now driven by those scan events.
+2. **Crowd Management** tab → watch the stadium map and KPI strip update live → **Generate AI advisory** for
+   a control-room briefing, PA announcement, and rerouting actions computed from your scans.
+3. **Decision Support** tab → type a what-if ("If Gate 2 closes for 15 minutes…") → **Generate brief**.
+4. **Multilingual Assistant** tab → switch reply language to Hindi → ask "Where can I park?".
+
 ## Architecture
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the three-plane design (sensing → intelligence → interaction),

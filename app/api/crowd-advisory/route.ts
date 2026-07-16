@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ADVISORY_CACHE_TTL_MS } from "@/lib/constants";
 import { projectAllGates } from "@/lib/crowdForecast";
 import { generateText } from "@/lib/llm";
 import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
       // Bucket the cache key by each gate's status so a materially changed
       // situation regenerates, but repeated clicks within a minute don't.
       cacheKey: `crowd-advisory:${projections.map((g) => g.status).join(",")}`,
-      cacheTtlMs: 60_000,
+      cacheTtlMs: ADVISORY_CACHE_TTL_MS,
     });
 
     return NextResponse.json({

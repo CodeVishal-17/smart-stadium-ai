@@ -2,6 +2,7 @@
 
 import { Activity, AlertTriangle, DoorOpen, Users } from "lucide-react";
 import { useEffect, useState } from "react";
+import { GATE_POLL_INTERVAL_MS, SPARKLINE_HISTORY_CAP } from "@/lib/constants";
 
 type Totals = {
   attendance: number;
@@ -12,9 +13,6 @@ type Totals = {
   incidents: number;
 };
 
-const POLL_MS = 8000;
-
-const HISTORY_CAP = 40;
 
 function Sparkline({ points }: { points: number[] }) {
   if (points.length < 2) return null;
@@ -47,7 +45,7 @@ export function OverviewStrip() {
         if (!cancelled) {
           setTotals(json.totals);
           setUpdatedAt(json.updatedAt);
-          setHistory((h) => [...h, json.totals.attendance].slice(-HISTORY_CAP));
+          setHistory((h) => [...h, json.totals.attendance].slice(-SPARKLINE_HISTORY_CAP));
         }
       } catch {
         // transient polling errors are fine to ignore; next tick retries
@@ -55,7 +53,7 @@ export function OverviewStrip() {
     }
 
     poll();
-    const id = setInterval(poll, POLL_MS);
+    const id = setInterval(poll, GATE_POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
       clearInterval(id);
