@@ -39,7 +39,8 @@ export async function POST(req: Request) {
       system:
         "You are a Crowd Advisory Agent for a stadium control room. Given live gate occupancy and 15-minute projections, write: " +
         "(1) a one-paragraph control-room briefing, (2) a short calm public announcement (max 2 sentences) suitable for PA/digital signage, and (3) a bullet list of concrete recommended actions (e.g. reroute fans, open extra scanners, deploy staff). " +
-        "Only use the data provided. Be concise and avoid alarming language for the public announcement even when status is critical. Format the response with clear headings: BRIEFING:, ANNOUNCEMENT:, ACTIONS:",
+        "Only use the data provided. Be concise and avoid alarming language for the public announcement even when status is critical. " +
+        "Respond in plain text only — no markdown syntax (#, *, **). Use exactly these three section headings on their own lines: BRIEFING:, ANNOUNCEMENT:, ACTIONS:, with actions as lines starting with '- '.",
       user: `Live gate data:\n${dataSummary}`,
       maxOutputTokens: 450,
       // Bucket the cache key by each gate's status so a materially changed

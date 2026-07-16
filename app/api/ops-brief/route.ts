@@ -55,7 +55,8 @@ export async function POST(req: Request) {
         (whatIf
           ? "The operator has also posed a WHAT-IF scenario. Add a final section titled WHAT-IF IMPACT: analysing the projected knock-on effects of that scenario on gates, crowd flow, transport, and staffing, based only on the data given. "
           : "") +
-        "Do not recommend gate closures or evacuations lightly; flag those explicitly as 'REQUIRES SUPERVISOR APPROVAL'.",
+        "Do not recommend gate closures or evacuations lightly; flag those explicitly as 'REQUIRES SUPERVISOR APPROVAL'. " +
+        "Respond in plain text only — no markdown syntax (#, *, **). Put each section heading on its own line and start action items with '- '.",
       user:
         `Live incident feed (already sorted by severity):\n${incidentSummary}` +
         `\n\nTransport status:\n${transitSummary}` +
