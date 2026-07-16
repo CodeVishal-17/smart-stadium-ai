@@ -8,10 +8,15 @@ export const dynamic = "force-dynamic";
 // without leaking any secrets. The probe result is cached for 5 minutes
 // (via generateText's cache) so polling this endpoint doesn't burn quota.
 export async function GET() {
-  const keyPresent = Boolean(process.env.GEMINI_API_KEY);
+  const provider = process.env.GROQ_API_KEY ? "groq" : process.env.GEMINI_API_KEY ? "gemini" : null;
 
-  if (!keyPresent) {
-    return NextResponse.json({ status: "degraded", keyPresent, ai: "unavailable", reason: "GEMINI_API_KEY is not set." });
+  if (!provider) {
+    return NextResponse.json({
+      status: "degraded",
+      provider: null,
+      ai: "unavailable",
+      reason: "No AI provider configured. Set GROQ_API_KEY or GEMINI_API_KEY.",
+    });
   }
 
   try {
@@ -22,11 +27,11 @@ export async function GET() {
       cacheKey: "health-probe",
       cacheTtlMs: 5 * 60_000,
     });
-    return NextResponse.json({ status: "ok", keyPresent, ai: "available", probe: text.slice(0, 20) });
+    return NextResponse.json({ status: "ok", provider, ai: "available", probe: text.slice(0, 20) });
   } catch (err) {
     return NextResponse.json({
       status: "degraded",
-      keyPresent,
+      provider,
       ai: "unavailable",
       reason: err instanceof Error ? err.message : "Unknown error",
     });

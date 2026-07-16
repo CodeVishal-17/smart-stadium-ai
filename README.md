@@ -44,7 +44,7 @@ curl -X POST /api/scan -H "Content-Type: application/json" \
 ## Tech stack
 
 - Next.js (App Router) + TypeScript + Tailwind CSS
-- Google Gemini API (`gemini-2.5-flash-lite` by default) for all four GenAI modules
+- Provider-agnostic GenAI layer: Groq (Llama 3.3 70B) or Google Gemini behind one wrapper, with per-provider model fallback chains
 - Zod for request validation at the API boundary
 - Vitest for unit tests of the non-LLM logic (retrieval, forecasting, live-feed simulation, rate limiting,
   validation)
@@ -53,7 +53,7 @@ curl -X POST /api/scan -H "Content-Type: application/json" \
 
 ```bash
 npm install
-cp .env.example .env.local   # then add your real GEMINI_API_KEY
+cp .env.example .env.local   # then add your GROQ_API_KEY (or GEMINI_API_KEY)
 npm run dev
 ```
 
@@ -63,8 +63,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Variable          | Required | Description                                   |
 | ----------------- | -------- | ---------------------------------------------- |
-| `GEMINI_API_KEY`  | Yes      | Your Google Gemini API key (from [Google AI Studio](https://aistudio.google.com/apikey)). Never exposed to the client — only read server-side inside API routes. |
-| `GEMINI_MODEL`    | No       | Defaults to `gemini-2.5-flash-lite` (best free-tier quota). |
+| `GROQ_API_KEY`    | One of the two | Groq API key (free at [console.groq.com/keys](https://console.groq.com/keys)). Preferred when set. Never exposed to the client — only read server-side. |
+| `GROQ_MODEL`      | No       | Defaults to `llama-3.3-70b-versatile`.         |
+| `GEMINI_API_KEY`  | One of the two | Google Gemini key (from [Google AI Studio](https://aistudio.google.com/apikey)); used when `GROQ_API_KEY` is not set. |
+| `GEMINI_MODEL`    | No       | Defaults to `gemini-2.5-flash-lite`.           |
 
 ### Scripts
 
@@ -78,8 +80,8 @@ npm test        # vitest unit tests
 
 ## Deploying
 
-The app deploys as-is to [Vercel](https://vercel.com/new): import the GitHub repo, add `GEMINI_API_KEY`
-(and optionally `GEMINI_MODEL`) as environment variables in the Vercel project settings, and deploy.
+The app deploys as-is to [Vercel](https://vercel.com/new): import the GitHub repo, add `GROQ_API_KEY`
+(or `GEMINI_API_KEY`) as an environment variable in the Vercel project settings, and deploy.
 
 ## Architecture
 
@@ -101,7 +103,7 @@ a request-lifecycle walkthrough, key design decisions, and the production harden
 
 ## Design notes
 
-- **Security**: the Gemini key is only ever read server-side (`lib/llm.ts`); API routes validate all
+- **Security**: AI provider keys are only ever read server-side (`lib/llm.ts`); API routes validate all
   input with Zod and apply a simple in-memory rate limit per client IP.
 - **Cost-aware design**: the dashboard's live gate feed polls a zero-cost snapshot endpoint
   (`/api/gates`) — LLM calls only happen when an operator explicitly requests an advisory, brief, or
