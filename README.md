@@ -2,10 +2,14 @@
 
 [![CI](https://github.com/CodeVishal-17/smart-stadium-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/CodeVishal-17/smart-stadium-ai/actions/workflows/ci.yml)
 
-A working GenAI solution for stadium operations and tournament experience during **FIFA World Cup 2026** —
-built for the "Smart Stadiums & Tournament Operations" challenge. It serves fans, organizers, volunteers,
-and venue staff from one control room, with every AI response grounded in live venue data (not
-hallucinated):
+## Chosen vertical
+
+**Smart Stadiums & Tournament Operations** — a GenAI solution for stadium operations and the tournament
+experience during **FIFA World Cup 2026**. It serves four personas from one control room: **fans**
+(navigation, transport, multilingual help), **organizers** (crowd advisories, decision support),
+**volunteers** (grounded answers they can relay), and **venue staff** (scan-device operations).
+
+Every AI response is grounded in live venue data (not hallucinated):
 
 - **Dynamic Crowd Management** — gate headcounts are driven by real scan events: ticket-scanner devices are
   registered per gate and every scan they report (`POST /api/scan`) moves that gate's live count. The
@@ -109,6 +113,20 @@ a request-lifecycle walkthrough, key design decisions, and the production harden
 | Transportation | Indoor Navigation tab (live transport status), FAQ grounding | Metro/shuttle/parking/rideshare status feeds the Ops Copilot and the fan assistant's transport answers |
 | Sustainability | Decision Support tab (sustainability telemetry) | Energy, waste, and water telemetry is part of the AI ops brief, so recommendations account for sustainability targets |
 | Operational intelligence / sensing plane (IoT) | Scan Devices tab, `/api/devices`, `/api/scan` | Ticket scanners register per gate and stream real scan events that drive every dashboard number |
+
+## Assumptions
+
+- **One venue, one matchday** is in scope; multi-venue tournament coordination would sit a layer above this
+  control room and consume the same APIs.
+- **Sensor data arrives as discrete events**: ticket scanners report entries/exits via `POST /api/scan`.
+  Camera-based density estimation, Wi-Fi/BLE heatmaps, and city transit APIs are represented by sample data
+  (`lib/venueData.ts`) with the integration points documented in [ARCHITECTURE.md](ARCHITECTURE.md).
+- **Single-instance deployment** for the demo: the scan ledger, response cache, and rate limiter are
+  in-memory. Each is deliberately isolated behind one module so a Redis/Postgres swap needs no API changes.
+- **The AI recommends, humans decide**: prompts are written so the model never claims an action was taken;
+  gate closures and evacuations are explicitly flagged for supervisor approval.
+- **Free-tier AI quotas are a real constraint**, so identical requests are cached and every route degrades
+  to a clearly labeled rules-engine response instead of failing.
 
 ## Design notes
 
