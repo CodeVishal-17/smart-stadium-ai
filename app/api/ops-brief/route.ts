@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { parseJsonBody, rateLimitGuard } from "@/lib/apiHelpers";
 import { ADVISORY_CACHE_TTL_MS } from "@/lib/constants";
 import { generateText } from "@/lib/llm";
-import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
 import { incidentFeed, sustainabilityMetrics, transitOptions } from "@/lib/venueData";
 import { opsBriefSchema } from "@/lib/validation";
 
@@ -10,16 +10,10 @@ export const runtime = "nodejs";
 const severityRank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
 
 export async function POST(req: Request) {
-  if (isRateLimited(clientKeyFromRequest(req))) {
-    return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
-  }
+  const limited = rateLimitGuard(req);
+  if (limited) return limited;
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    body = {};
-  }
+  const body = await parseJsonBody(req);
 
   const parsed = opsBriefSchema.safeParse(body);
   if (!parsed.success) {

@@ -18,7 +18,9 @@ Every AI response is grounded in live venue data (not hallucinated):
   public announcement, and concrete recommended actions.
 - **Smart Indoor Navigation** — a lightweight retrieval layer (RAG-lite, no vector DB needed for this scope)
   matches a fan's natural-language request against venue points of interest (restrooms, food, medical,
-  exits), factoring in live crowd level and accessibility, then an LLM composes directions.
+  exits), making context-aware decisions from the fan's situation: their current zone ranks nearby options
+  first, live crowd level steers them away from queues, and accessibility needs filter the results — then an
+  LLM composes directions starting from where they stand.
 - **Real-Time Decision Support** — an Ops Copilot ingests a multi-source incident feed (CCTV, medical
   requests, weather, staff reports), ranks by severity, and drafts an SOP-aligned situation brief. A
   **what-if simulator** lets the operator pose scenarios ("If Gate 2 closes for 15 minutes…") and get a

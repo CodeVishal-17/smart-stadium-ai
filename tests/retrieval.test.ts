@@ -30,4 +30,16 @@ describe("retrievePois", () => {
     const results = retrievePois("exit", {}, 1);
     expect(results.length).toBeLessThanOrEqual(1);
   });
+
+  it("prefers options in the fan's current zone when provided", () => {
+    // Restroom C is in Concourse C; without zone context it ranks below
+    // the accessible restrooms, but from Concourse C it should be first.
+    const results = retrievePois("restroom", { zone: "Concourse C" });
+    expect(results[0].zone).toBe("Concourse C");
+  });
+
+  it("matches the zone case-insensitively", () => {
+    const results = retrievePois("restroom", { zone: "concourse e" });
+    expect(results[0].zone).toBe("Concourse E");
+  });
 });

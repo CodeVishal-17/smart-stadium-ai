@@ -1,31 +1,25 @@
 import { NextResponse } from "next/server";
+import { parseJsonBody, rateLimitGuard } from "@/lib/apiHelpers";
 import { QUERY_CACHE_TTL_MS } from "@/lib/constants";
 import { generateText } from "@/lib/llm";
-import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
 import { retrievePois } from "@/lib/retrieval";
 import { navigationRequestSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  if (isRateLimited(clientKeyFromRequest(req))) {
-    return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
-  }
+  const limited = rateLimitGuard(req);
+  if (limited) return limited;
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    body = {};
-  }
+  const body = await parseJsonBody(req);
 
   const parsed = navigationRequestSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Please enter a valid question (2-300 characters)." }, { status: 400 });
   }
 
-  const { query, accessibleOnly } = parsed.data;
-  const matches = retrievePois(query, { accessibleOnly });
+  const { query, accessibleOnly, zone } = parsed.data;
+  const matches = retrievePois(query, { accessibleOnly, zone });
 
   if (matches.length === 0) {
     return NextResponse.json({
@@ -45,9 +39,12 @@ export async function POST(req: Request) {
         "You are a Smart Indoor Navigation assistant for a stadium. Using ONLY the point-of-interest data provided, recommend the single best option for the fan's request " +
         "(prefer lower crowd level and accessibility match when relevant), then give brief turn-by-turn style directions referencing the zone and nearest gate. " +
         "If multiple options are given, mention the best one first and note the alternative. Keep it under 80 words. Do not invent locations not in the data.",
-      user: `Fan request: "${query}"\nAccessible-only requested: ${accessibleOnly}\n\nMatching points of interest:\n${poiSummary}`,
+      user:
+        `Fan request: "${query}"\nAccessible-only requested: ${accessibleOnly}` +
+        (zone ? `\nFan's current location: ${zone} — prefer options in or near this zone and give directions starting from it.` : "") +
+        `\n\nMatching points of interest:\n${poiSummary}`,
       maxOutputTokens: 220,
-      cacheKey: `nav:${accessibleOnly}:${query.trim().toLowerCase()}`,
+      cacheKey: `nav:${accessibleOnly}:${zone?.toLowerCase() ?? ""}:${query.trim().toLowerCase()}`,
       cacheTtlMs: QUERY_CACHE_TTL_MS,
     });
 

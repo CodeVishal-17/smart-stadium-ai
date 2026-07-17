@@ -9,21 +9,25 @@ import { StatusPill } from "./StatusPill";
 
 type NavigationResponse = { matches: Poi[]; directions: string };
 
+const ZONES = ["Concourse A", "Concourse B", "Concourse C", "Concourse D", "Concourse E"];
+
 export function NavigationPanel() {
   const [query, setQuery] = useState("Find the nearest accessible restroom that isn't crowded");
   const [accessibleOnly, setAccessibleOnly] = useState(false);
+  const [zone, setZone] = useState("");
   const [matches, setMatches] = useState<Poi[]>([]);
   const [directions, setDirections] = useState<string | null>(null);
   const { post, loading, error, setError } = useApiPost<NavigationResponse>("/api/navigation");
   const inputId = useId();
   const checkboxId = useId();
+  const zoneId = useId();
 
   async function submit() {
     if (query.trim().length < 2) {
       setError("Please enter at least 2 characters.");
       return;
     }
-    const result = await post({ query, accessibleOnly });
+    const result = await post({ query, accessibleOnly, ...(zone ? { zone } : {}) });
     if (result) {
       setMatches(result.matches ?? []);
       setDirections(result.directions ?? null);
@@ -64,18 +68,41 @@ export function NavigationPanel() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            id={checkboxId}
-            type="checkbox"
-            checked={accessibleOnly}
-            onChange={(e) => setAccessibleOnly(e.target.checked)}
-            className="h-4 w-4 rounded border-white/20 bg-black/30 accent-emerald-500"
-          />
-          <label htmlFor={checkboxId} className="flex items-center gap-1.5 text-sm text-slate-300">
-            <Accessibility className="h-4 w-4 text-slate-400" aria-hidden="true" />
-            Accessible routes only
-          </label>
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label htmlFor={zoneId} className="mb-1.5 block text-sm font-medium text-slate-300">
+              Your current location (optional)
+            </label>
+            <select
+              id={zoneId}
+              value={zone}
+              onChange={(e) => setZone(e.target.value)}
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-slate-100 focus:border-emerald-500/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="" className="bg-slate-900">
+                Not sure / anywhere
+              </option>
+              {ZONES.map((z) => (
+                <option key={z} value={z} className="bg-slate-900">
+                  {z}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 pb-2.5">
+            <input
+              id={checkboxId}
+              type="checkbox"
+              checked={accessibleOnly}
+              onChange={(e) => setAccessibleOnly(e.target.checked)}
+              className="h-4 w-4 rounded border-white/20 bg-black/30 accent-emerald-500"
+            />
+            <label htmlFor={checkboxId} className="flex items-center gap-1.5 text-sm text-slate-300">
+              <Accessibility className="h-4 w-4 text-slate-400" aria-hidden="true" />
+              Accessible routes only
+            </label>
+          </div>
         </div>
 
         <LoadingButton onClick={submit} loading={loading}>

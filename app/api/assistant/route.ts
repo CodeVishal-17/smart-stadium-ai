@@ -1,23 +1,17 @@
 import { NextResponse } from "next/server";
+import { parseJsonBody, rateLimitGuard } from "@/lib/apiHelpers";
 import { QUERY_CACHE_TTL_MS } from "@/lib/constants";
 import { generateText } from "@/lib/llm";
-import { clientKeyFromRequest, isRateLimited } from "@/lib/rateLimit";
 import { retrieveFaqs } from "@/lib/retrieval";
 import { assistantRequestSchema } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  if (isRateLimited(clientKeyFromRequest(req))) {
-    return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
-  }
+  const limited = rateLimitGuard(req);
+  if (limited) return limited;
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    body = {};
-  }
+  const body = await parseJsonBody(req);
 
   const parsed = assistantRequestSchema.safeParse(body);
   if (!parsed.success) {

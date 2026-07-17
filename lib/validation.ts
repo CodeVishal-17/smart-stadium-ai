@@ -9,6 +9,8 @@ export const crowdAdvisorySchema = z.object({
 export const navigationRequestSchema = z.object({
   query: z.string().min(2).max(300),
   accessibleOnly: z.boolean().optional().default(false),
+  /** The fan's current concourse zone, used to prefer nearby options. */
+  zone: z.string().max(60).optional(),
 });
 
 export const opsBriefSchema = z.object({
